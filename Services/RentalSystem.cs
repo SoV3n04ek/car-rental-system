@@ -30,36 +30,31 @@ public class RentalSystem : IRentalSystem
         return _vehicleRepository.GetVehicles();
     }
 
-    public RentalResult RentVehicle(string vehicleId, string clientPhone, int days)
+    public Rental RentVehicle(string vehicleId, string clientPhone, int days)
     {
         // find vehicle
-        var vehicle = _vehicleRepository.GetById(vehicleId);
-        if (vehicle == null || !vehicle.IsAvaible)
-            return RentalResult.Failure("Vehicle not available");
+        var vehicle = _vehicleRepository.GetById(vehicleId)
+            ?? throw new Exception("Vehicle not found");
 
         // find client
-        var client = _clientRepository.GetByPhone(clientPhone);
-        if (client == null)
-            return RentalResult.Failure("Client not found");
-        if (!client.IsVerified)
-            return RentalResult.Failure("Client not verified");
+        var client = _clientRepository.GetByPhone(clientPhone)
+            ?? throw new Exception("Client not found");
 
         // create rent
-        var rental = new Rental(vehicle, client, days);
+        var rental = new Rental(vehicle, client, days, DateTime.Now);
         _rentalRepository.Add(rental);
 
-        return RentalResult.Success(rental);
+        return rental;
     }
 
-    public ReturnResult ReturnVehicle(string vehicleId)
+    public decimal ReturnVehicle(string vehicleId)
     {
-        var rental = _rentalRepository.GetActiveRentalByVehicleId(vehicleId);
-        if (rental == null) 
-            return ReturnResult.Failure("Active rental not found for this vehicle");
-
-        decimal lateFee = rental.ReturnVehicle();
+        var rental = _rentalRepository.GetActiveRentalByVehicleId(vehicleId)
+            ?? throw new Exception("Active rental not found");
+        
+        decimal lateFee = rental.ReturnVehicle(DateTime.Now);
         _rentalRepository.Update(rental);
 
-        return ReturnResult.Success(lateFee);
+        return lateFee;
     }
 }

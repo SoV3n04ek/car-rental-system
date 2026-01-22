@@ -2,56 +2,47 @@
 {
     public class Client
     {
-        public Guid Id { get; }
+        public Guid Id { get; init; } = Guid.NewGuid();
         public string FirstName { get; private set; }
         public string LastName { get; private set; }
         public string PhoneNumber { get; private set; }
-        public string DrivingLicenseNumber { get; }
-        public DateTime LicenseExpiryDate { get; }
-        public DateTime RegistrationDate { get; }      
+        public string DrivingLicenseNumber { get; init; }
+        public DateTime LicenseExpiryDate { get; init; }
+        public DateTime RegistrationDate { get; init; } = DateTime.Now;
         public bool IsVerified { get; private set; }
 
-        public Client(
-            string firstName, 
-            string lastName,
-            string phoneNumber, 
-            string drivingLicenseNumber,
-            DateTime licenseExpiryDate)
+        private Client(string firstName, string lastName, string phone, string license, DateTime expiry)
         {
-            // TODO: refactor to fabric method or Builder 
-            if (!ValidateName(firstName))
+            if (!DataValidator.ValidateName(firstName))
                 throw new ArgumentException("Invalid first name");
-            if (!ValidateName(lastName))
+            
+            if (!DataValidator.ValidateName(lastName)) 
                 throw new ArgumentException("Invalid last name");
-            if (!ValidatePhone(phoneNumber))
+            
+            if (!DataValidator.ValidatePhone(phone)) 
                 throw new ArgumentException("Invalid phone number");
-            if (string.IsNullOrWhiteSpace(drivingLicenseNumber))
-                throw new ArgumentException("Invalid driving license number");
-            if (licenseExpiryDate <= DateTime.Now)
-                throw new ArgumentException("License has expired");
+            
+            if (expiry <= DateTime.Now.AddMonths(1))
+                throw new ArgumentException("License expires too soon");
 
-            Id = Guid.NewGuid();
             FirstName = firstName;
             LastName = lastName;
-            PhoneNumber = phoneNumber;
-            DrivingLicenseNumber = drivingLicenseNumber;
-            LicenseExpiryDate = licenseExpiryDate;
-            RegistrationDate = DateTime.Now;
-            IsVerified = licenseExpiryDate > DateTime.Now.AddMonths(1);
+            PhoneNumber = phone;
+            DrivingLicenseNumber = license;
+            LicenseExpiryDate = expiry;
+            IsVerified = true;
         }
 
-        private static bool ValidateName(string name)
+        public static Client Register(string firstName, string lastName, string phone, string license, DateTime expiry)
         {
-            return !string.IsNullOrWhiteSpace(name)
-                && name.Length >= 2
-                && char.IsUpper(name[0]);
+            return new Client(firstName, lastName, phone, license, expiry);
         }
 
-        private static bool ValidatePhone(string phone)
+        public void UpdateContact(string newPhone)
         {
-            return !string.IsNullOrWhiteSpace(phone)
-                && phone.Length >= 9
-                && phone.All(c => char.IsDigit(c) || c == '+');
+            if (!DataValidator.ValidatePhone(newPhone)) 
+                throw new ArgumentException("Invalid phone");
+            PhoneNumber = newPhone;
         }
     }
 }
