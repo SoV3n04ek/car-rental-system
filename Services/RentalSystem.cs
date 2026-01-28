@@ -57,4 +57,20 @@ public class RentalSystem : IRentalSystem
 
         return lateFee;
     }
+
+    public void DeleteClient(string phone)
+    {
+        var client = _clientRepository.GetByPhone(phone)
+                     ?? throw new RentalDomainException("Клієнта не знайдено.");
+
+        var hasActiveRentals = _rentalRepository.GetAllRentals()
+            .Any(r => r.Client.PhoneNumber == phone && r.IsActive);
+
+        if (hasActiveRentals)
+        {
+            throw new RentalDomainException("Неможливо видалити клієнта з активною орендою.");
+        }
+
+        _clientRepository.Delete(phone);
+    }
 }

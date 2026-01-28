@@ -6,5 +6,7 @@
         Client GetByPhone(string phone);
         void Add(Client client);
         bool Exists(string phone);
+        void Update(Client client);
+        void Delete(string phone);
     }
 }

@@ -10,6 +10,7 @@
         public DateTime LicenseExpiryDate { get; init; }
         public DateTime RegistrationDate { get; init; } = DateTime.Now;
         public bool IsVerified { get; private set; }
+        public bool IsDeleted { get; private set; } = false;
 
         private Client(string firstName, string lastName, string phone, string license, DateTime expiry)
         {
@@ -43,6 +44,11 @@
             if (!DataValidator.ValidatePhone(newPhone)) 
                 throw new ArgumentException("Invalid phone");
             PhoneNumber = newPhone;
+        }
+
+        public void MarkAsDeleted()
+        {
+            IsDeleted = true;
         }
     }
 }
