@@ -7,5 +7,7 @@
         IEnumerable<Vehicle> GetAvaibleVehicles();
         Rental RentVehicle(string vehicleId, string clientPhone, int days);
         decimal ReturnVehicle(string vehicleId);
+        void RemoveClient(string phone);
+        void RemoveVehicle(string id);
     }
 }

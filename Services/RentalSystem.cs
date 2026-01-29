@@ -27,7 +27,7 @@ public class RentalSystem : IRentalSystem
 
     public IEnumerable<Vehicle> GetVehicles()
     {
-        return _vehicleRepository.GetVehicles();
+        return _vehicleRepository.GetAll();
     }
 
     public Rental RentVehicle(string vehicleId, string clientPhone, int days)
@@ -58,19 +58,35 @@ public class RentalSystem : IRentalSystem
         return lateFee;
     }
 
-    public void DeleteClient(string phone)
+    public void RemoveClient(string phone)
     {
         var client = _clientRepository.GetByPhone(phone)
-                     ?? throw new RentalDomainException("Клієнта не знайдено.");
+                     ?? throw new RentalDomainException("Client not found.");
 
-        var hasActiveRentals = _rentalRepository.GetAllRentals()
+        bool hasActiveRentals = _rentalRepository.GetAllRentals()
             .Any(r => r.Client.PhoneNumber == phone && r.IsActive);
 
         if (hasActiveRentals)
         {
-            throw new RentalDomainException("Неможливо видалити клієнта з активною орендою.");
+            throw new RentalDomainException("It is impossible to delete a client with an active rent.");
         }
 
         _clientRepository.Delete(phone);
+    }
+
+    public void RemoveVehicle(string id)
+    {
+        var vehicle = _vehicleRepository.GetById(id)
+                      ?? throw new RentalDomainException("Vehicle not found.");
+
+        bool hasActiveRentals = _rentalRepository.GetAllRentals()
+            .Any(r => r.Vehicle.Id == id && r.IsActive);
+
+        if (hasActiveRentals)
+        {
+            throw new RentalDomainException("It is impossible to delete a vehicle with an active rent.");
+        }
+
+        _vehicleRepository.Delete(id);
     }
 }

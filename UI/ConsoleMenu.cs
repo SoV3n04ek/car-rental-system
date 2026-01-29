@@ -28,6 +28,8 @@
                         case "4": ReturnVehicle(); break;
                         case "5": ShowState(); break;
                         case "6": RunTests(); break;
+                        case "7": DeleteClient(); break;
+                        case "8": UpdateClient(); break;
                         case "0": return;
                         default:
                             Console.WriteLine("Invalid option. Please choose 0-6.");
@@ -163,6 +165,47 @@
                 foreach (var v in vehicles) Console.WriteLine(v);
         }
 
+        private void DeleteClient()
+        {
+            Console.WriteLine("\n--- Delete Client ---");
+            var phone = GetInput("Enter client phone", DataValidator.ValidatePhone);
+            _rentalSystem.RemoveClient(phone);
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Client deleted successfully.");
+            Console.ResetColor();
+        }
+
+        private void UpdateClient()
+        {
+            Console.WriteLine("\n--- Update Client Data ---");
+            var phone = GetInput("Enter client phone", DataValidator.ValidatePhone);
+            var client = _clientRepository.GetByPhone(phone);
+            
+            if (client == null)
+            {
+                Console.WriteLine("Client not found.");
+                return;
+            }
+
+            Console.WriteLine($"Current name: {client.FirstName} {client.LastName}");
+            
+            Console.Write("Enter new First Name (leave empty to keep current): ");
+            var newFirstName = Console.ReadLine();
+            
+            Console.Write("Enter new Last Name (leave empty to keep current): ");
+            var newLastName = Console.ReadLine();
+            
+            if (!string.IsNullOrWhiteSpace(newFirstName) || !string.IsNullOrWhiteSpace(newLastName))
+            {
+                client.UpdateName(newFirstName ?? "", newLastName ?? "");
+                _clientRepository.Update(client);
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Client updated successfully.");
+                Console.ResetColor();
+            }
+        }
+
         private string GetInput(string prompt, Func<string, bool> validator)
         {
             do
@@ -187,6 +230,8 @@
             Console.WriteLine("4. Return a Vehicle");
             Console.WriteLine("5. Show System State");
             Console.WriteLine("6. Run Integration Tests");
+            Console.WriteLine("7. Delete Client");
+            Console.WriteLine("8. Update Client Data");
             Console.WriteLine("0. Exit");
             Console.Write("Select option: ");
         }

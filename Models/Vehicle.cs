@@ -6,6 +6,9 @@
         public string Model { get; set; }
         public decimal BasePricePerDay { get; }
         internal bool IsAvaible { get; set; } = true;
+        public bool IsDeleted { get; private set; } = false;
+
+        public void MarkAsDeleted() => IsDeleted = true;
 
         protected Vehicle(string id, string model, decimal price)
         {

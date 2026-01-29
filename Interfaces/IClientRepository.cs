@@ -1,4 +1,7 @@
-﻿namespace CarRentalSystem
+﻿using System;
+using System.Collections.Generic;
+
+namespace CarRentalSystem
 {
     public interface IClientRepository
     {
@@ -8,5 +11,6 @@
         bool Exists(string phone);
         void Update(Client client);
         void Delete(string phone);
+        IEnumerable<Client> GetAll();
     }
 }

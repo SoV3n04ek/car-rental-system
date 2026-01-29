@@ -50,5 +50,11 @@
         {
             IsDeleted = true;
         }
+
+        public void UpdateName(string firstName, string lastName)
+        {
+            if (!string.IsNullOrWhiteSpace(firstName)) FirstName = firstName;
+            if (!string.IsNullOrWhiteSpace(lastName)) LastName = lastName;
+        }
     }
 }

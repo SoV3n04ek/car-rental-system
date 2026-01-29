@@ -1,4 +1,6 @@
-﻿namespace CarRentalSystem
+﻿using System.Collections.Generic;
+
+namespace CarRentalSystem
 {
     public interface IVehicleRepository
     {
@@ -6,6 +8,7 @@
         Vehicle GetById(string id);
         IEnumerable<Vehicle> GetAvailable();
         void Update(Vehicle vehicle);
-        IEnumerable<Vehicle> GetVehicles();
+        void Delete(string id);
+        IEnumerable<Vehicle> GetAll();
     }
 }
