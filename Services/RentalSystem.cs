@@ -63,7 +63,7 @@ public class RentalSystem : IRentalSystem
         var client = _clientRepository.GetByPhone(phone)
                      ?? throw new RentalDomainException("Client not found.");
 
-        bool hasActiveRentals = _rentalRepository.GetAllRentals()
+        bool hasActiveRentals = _rentalRepository.GetAll()
             .Any(r => r.Client.PhoneNumber == phone && r.IsActive);
 
         if (hasActiveRentals)
@@ -79,7 +79,7 @@ public class RentalSystem : IRentalSystem
         var vehicle = _vehicleRepository.GetById(id)
                       ?? throw new RentalDomainException("Vehicle not found.");
 
-        bool hasActiveRentals = _rentalRepository.GetAllRentals()
+        bool hasActiveRentals = _rentalRepository.GetAll()
             .Any(r => r.Vehicle.Id == id && r.IsActive);
 
         if (hasActiveRentals)
@@ -88,5 +88,15 @@ public class RentalSystem : IRentalSystem
         }
 
         _vehicleRepository.Delete(id);
+    }
+
+    public IEnumerable<Client> GetClients()
+    {
+        return _clientRepository.GetAll();
+    }
+
+    public IEnumerable<Rental> GetRentals()
+    {
+        return _rentalRepository.GetAll();
     }
 }

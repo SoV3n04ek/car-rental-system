@@ -4,11 +4,13 @@ var vehicleRepo = new InMemoryVehicleRepository();
 var clientRepo = new InMemoryClientRepository();
 var rentalRepo = new InMemoryRentalRepository();
 
-vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C001", "Toyota Camry", 50));
-vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C002", "Tesla Model 3", 100));
-vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C003", "BMW M4", 150));
+vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C001", "Toyota Camry", 350));
+vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C002", "Tesla Model 3", 500));
+vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C003", "BMW M4", 750));
+vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C004", "Volvo XC60", 450));
+vehicleRepo.Add(VehicleFactory.CreateVehicle("car", "C005", "Mazda CX5", 350));
 
-var rentalSystem = new RentalSystem(vehicleRepo, clientRepo, rentalRepo);
+RentalSystem rentalSystem = new RentalSystem(vehicleRepo, clientRepo, rentalRepo);
 
-var menu = new ConsoleMenu(rentalSystem, clientRepo);
+ConsoleMenu menu = new ConsoleMenu(rentalSystem, clientRepo);
 menu.Start();

@@ -11,6 +11,6 @@
             && r.IsActive);
         }
 
-        public IEnumerable<Rental> GetAllRentals() => _rentals;
+        public IEnumerable<Rental> GetAll() => _rentals;
     }
 }

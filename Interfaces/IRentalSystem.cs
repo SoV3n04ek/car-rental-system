@@ -9,5 +9,7 @@
         decimal ReturnVehicle(string vehicleId);
         void RemoveClient(string phone);
         void RemoveVehicle(string id);
+        IEnumerable<Client> GetClients();
+        IEnumerable<Rental> GetRentals();
     }
 }

@@ -1,10 +1,12 @@
-﻿namespace CarRentalSystem
+﻿using CarRentalSystem.UI;
+
+namespace CarRentalSystem
 {
     public class ConsoleMenu
     {
         private readonly IRentalSystem _rentalSystem;
         private readonly IClientRepository _clientRepository;
-        
+
         public ConsoleMenu(IRentalSystem rentalSystem, IClientRepository clientRepository)
         {
             _rentalSystem = rentalSystem;
@@ -13,144 +15,44 @@
 
         public void Start()
         {
-            do
+            while (true)
             {
                 try
                 {
                     DisplayMenu();
                     var choice = Console.ReadLine();
 
-                    switch (choice)
+                    if (choice == "0")
                     {
-                        case "1": ShowAvailableVehicles(); break;
-                        case "2": RegisterClient(); break;
-                        case "3": RentVehicle(); break;
-                        case "4": ReturnVehicle(); break;
-                        case "5": ShowState(); break;
-                        case "6": RunTests(); break;
-                        case "7": DeleteClient(); break;
-                        case "8": UpdateClient(); break;
-                        case "0": return;
-                        default:
-                            Console.WriteLine("Invalid option. Please choose 0-6.");
-                            break;
+                        Console.WriteLine("Exiting program...");
+                        break;
                     }
+
+                    ProcessChoice(choice);
                 }
                 catch (Exception ex)
                 {
-                    // Global catch to prevent app from crashing
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine($"\n[SYSTEM ERROR]: {ex.Message}");
-                    Console.ResetColor();
+                    ConsoleHelper.WriteError($"\n[SYSTEM ERROR]: {ex.Message}");
                     Console.WriteLine("Returning to main menu...");
                 }
-            } while (true);
-        }
-
-        private void RunTests()
-        {
-            Test.RunAllTests(_rentalSystem, _clientRepository);
-        }
-
-        private void ShowState()
-        {
-            Console.WriteLine("\n" + new string('=', 40));
-            Console.WriteLine("       SYSTEM CURRENT STATE");
-            Console.WriteLine(new string('=', 40));
-
-            Console.WriteLine("\n[VEHICLES]");
-            foreach (var v in _rentalSystem.GetVehicles())
-            {
-                var status = v.IsAvaible ? "[FREE]" : "[RENTED]";
-                Console.WriteLine($"{status} {v.Id}: {v.Model} ({v.BasePricePerDay:C}/day)");
-            }
-            Console.WriteLine("\n" + new string('=', 40));
-        }
-
-        private void ReturnVehicle()
-        {
-            Console.WriteLine("\n--- Return Vehicle ---");
-            var id = GetInput("Enter vehicle ID to return", DataValidator.IsNotEmpty);
-
-            try
-            {
-                // Now returns a simple decimal (late fee) or throws exception
-                decimal lateFee = _rentalSystem.ReturnVehicle(id);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Vehicle returned successfully!");
-                Console.ResetColor();
-
-                if (lateFee > 0)
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine($"LATE FEE APPLIED: {lateFee:C}");
-                    Console.ResetColor();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error: {ex.Message}");
             }
         }
 
-        private void RentVehicle()
+        private void ProcessChoice(string? choice)
         {
-            Console.WriteLine("\n--- Rent Vehicle ---");
-            ShowAvailableVehicles();
-
-            var vehicleId = GetInput("Enter vehicle ID", s => !string.IsNullOrEmpty(s));
-            var clientPhone = GetInput("Enter your phone", DataValidator.ValidatePhone);
-
-            // Logic to handle unregistered clients
-            if (!_clientRepository.Exists(clientPhone))
+            switch (choice)
             {
-                Console.Write("Client not found. Register now? (y/n): ");
-                if (Console.ReadLine()?.ToLower() == "y")
-                {
-                    RegisterClient();
-                    if (!_clientRepository.Exists(clientPhone)) return;
-                }
-                else return;
-            }
-
-            var daysInput = GetInput("Days to rent", s => int.TryParse(s, out int d) && d > 0);
-
-            try
-            {
-                var rental = _rentalSystem.RentVehicle(vehicleId, clientPhone, int.Parse(daysInput));
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"Success! Price: {rental.TotalPrice:C}");
-                Console.ResetColor();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Rental failed: {ex.Message}");
-            }
-        }
-
-        private void RegisterClient()
-        {
-            Console.WriteLine("\n--- Client Registration ---");
-
-            var fName = GetInput("First Name", DataValidator.ValidateName);
-            var lName = GetInput("Last Name", DataValidator.ValidateName);
-            var phone = GetInput("Phone (+48...)", DataValidator.ValidatePhone);
-            var license = GetInput("License Number", DataValidator.IsNotEmpty);
-
-            try
-            {
-                var client = Client.Register(fName, lName, phone, license, DateTime.Now.AddYears(2));
-                _clientRepository.Add(client);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Client registered successfully!");
-                Console.ResetColor();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Registration failed: {ex.Message}");
+                case "1": ShowAvailableVehicles(); break;
+                case "2": RegisterClient(); break;
+                case "3": RentVehicle(); break;
+                case "4": ReturnVehicle(); break;
+                case "5": ShowState(); break;
+                case "6": RunTests(); break;
+                case "7": DeleteClient(); break;
+                case "8": UpdateClient(); break;
+                case "9": ShowAllClients(); break;
+                case "10": ShowAllRentals(); break;
+                default: Console.WriteLine("Invalid option. Please choose 0-10."); break;
             }
         }
 
@@ -165,75 +67,161 @@
                 foreach (var v in vehicles) Console.WriteLine(v);
         }
 
+        private void RegisterClient()
+        {
+            Console.WriteLine("\n--- Client Registration ---");
+
+            var fName = ConsoleHelper.GetInput("First Name", DataValidator.ValidateName);
+            var lName = ConsoleHelper.GetInput("Last Name", DataValidator.ValidateName);
+            var phone = ConsoleHelper.GetInput("Phone (+48...)", DataValidator.ValidatePhone);
+            var license = ConsoleHelper.GetInput("License Number", DataValidator.IsNotEmpty);
+
+            var client = Client.Register(fName, lName, phone, license, DateTime.Now.AddYears(2));
+            _clientRepository.Add(client);
+
+            ConsoleHelper.WriteSuccess("Client registered successfully!");
+        }
+
+        private void RentVehicle()
+        {
+            Console.WriteLine("\n--- Rent Vehicle ---");
+            ShowAvailableVehicles();
+
+            var vehicleId = ConsoleHelper.GetInput("Enter vehicle ID", s => !string.IsNullOrEmpty(s));
+            var clientPhone = ConsoleHelper.GetInput("Enter your phone", DataValidator.ValidatePhone);
+
+            if (!_clientRepository.Exists(clientPhone))
+            {
+                Console.Write("Client not found. Register now? (y/n): ");
+                if (Console.ReadLine()?.ToLower() != "y") return;
+
+                RegisterClient();
+                if (!_clientRepository.Exists(clientPhone)) return;
+            }
+
+            var daysInput = ConsoleHelper.GetInput("Days to rent", s => int.TryParse(s, out int d) && d > 0);
+            var rental = _rentalSystem.RentVehicle(vehicleId, clientPhone, int.Parse(daysInput));
+
+            ConsoleHelper.WriteSuccess($"Success! Rental ID: {rental.Id} | Price: {rental.TotalPrice:C}");
+        }
+
+        private void ReturnVehicle()
+        {
+            Console.WriteLine("\n--- Return Vehicle ---");
+            var id = ConsoleHelper.GetInput("Enter vehicle ID to return", DataValidator.IsNotEmpty);
+
+            decimal lateFee = _rentalSystem.ReturnVehicle(id);
+            ConsoleHelper.WriteSuccess("Vehicle returned successfully!");
+
+            if (lateFee > 0)
+                ConsoleHelper.WriteWarning($"LATE FEE APPLIED: {lateFee:C}");
+        }
+
+        private void ShowState()
+        {
+            Console.WriteLine("\n" + new string('=', 40));
+            Console.WriteLine("       SYSTEM CURRENT STATE");
+            Console.WriteLine(new string('=', 40));
+
+            Console.WriteLine("\n[VEHICLES]");
+            foreach (var v in _rentalSystem.GetVehicles())
+            {
+                string status = v.IsAvaible ? "[FREE]" : "[RENTED]";
+                Console.WriteLine($"{status} {v.Id}: {v.Model} ({v.BasePricePerDay:C}/day)");
+            }
+            Console.WriteLine("\n" + new string('=', 40));
+        }
+
+        private void RunTests()
+        {
+            Test.RunAllTests(_rentalSystem, _clientRepository);
+        }
+
         private void DeleteClient()
         {
             Console.WriteLine("\n--- Delete Client ---");
-            var phone = GetInput("Enter client phone", DataValidator.ValidatePhone);
+            var phone = ConsoleHelper.GetInput("Enter client phone", DataValidator.ValidatePhone);
             _rentalSystem.RemoveClient(phone);
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Client deleted successfully.");
-            Console.ResetColor();
+            ConsoleHelper.WriteSuccess("Client deleted successfully (Soft Delete).");
         }
 
         private void UpdateClient()
         {
             Console.WriteLine("\n--- Update Client Data ---");
-            var phone = GetInput("Enter client phone", DataValidator.ValidatePhone);
+            var phone = ConsoleHelper.GetInput("Enter client phone", DataValidator.ValidatePhone);
             var client = _clientRepository.GetByPhone(phone);
-            
+
             if (client == null)
             {
-                Console.WriteLine("Client not found.");
+                ConsoleHelper.WriteWarning("Client not found.");
                 return;
             }
 
             Console.WriteLine($"Current name: {client.FirstName} {client.LastName}");
-            
+
             Console.Write("Enter new First Name (leave empty to keep current): ");
             var newFirstName = Console.ReadLine();
-            
+
             Console.Write("Enter new Last Name (leave empty to keep current): ");
             var newLastName = Console.ReadLine();
-            
+
             if (!string.IsNullOrWhiteSpace(newFirstName) || !string.IsNullOrWhiteSpace(newLastName))
             {
                 client.UpdateName(newFirstName ?? "", newLastName ?? "");
                 _clientRepository.Update(client);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Client updated successfully.");
-                Console.ResetColor();
+                ConsoleHelper.WriteSuccess("Client updated successfully.");
             }
         }
 
-        private string GetInput(string prompt, Func<string, bool> validator)
+        private void ShowAllClients()
         {
-            do
+            Console.WriteLine("\n--- Registered Clients List ---");
+            var clients = _rentalSystem.GetClients();
+
+            if (!clients.Any())
             {
-                Console.Write($"{prompt}: ");
-                string input = Console.ReadLine()?.Trim() ?? "";
+                Console.WriteLine("No active clients registered.");
+                return;
+            }
 
-                if (validator(input)) return input;
+            foreach (var client in clients)
+            {
+                Console.WriteLine($"Name: {client.FirstName} {client.LastName} | Phone: {client.PhoneNumber}");
+                Console.WriteLine(new string('-', 35));
+            }
+        }
 
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Invalid input, please try again.");
-                Console.ResetColor();
-            } while (true);
+        private void ShowAllRentals()
+        {
+            Console.WriteLine("\n--- Rental History ---");
+            var rentals = _rentalSystem.GetRentals();
+
+            if (!rentals.Any())
+            {
+                Console.WriteLine("No rental history found.");
+                return;
+            }
+
+            foreach (var rental in rentals)
+            {
+                var status = rental.IsActive ? "ACTIVE" : "COMPLETED";
+                Console.WriteLine($"ID: {rental.Id.ToString().Substring(0, 8)}... | Car: {rental.Vehicle.Model}");
+                Console.WriteLine($"Client: {rental.Client.FirstName} {rental.Client.LastName} | Status: {status}");
+                Console.WriteLine($"Total Price: {rental.TotalPrice:C}");
+                Console.WriteLine(new string('-', 35));
+            }
         }
 
         private void DisplayMenu()
         {
             Console.WriteLine("\n======= Car Rental System =======");
-            Console.WriteLine("1. Show Available Vehicles");
-            Console.WriteLine("2. Register Client");
-            Console.WriteLine("3. Rent a Vehicle");
-            Console.WriteLine("4. Return a Vehicle");
-            Console.WriteLine("5. Show System State");
-            Console.WriteLine("6. Run Integration Tests");
-            Console.WriteLine("7. Delete Client");
-            Console.WriteLine("8. Update Client Data");
+            Console.WriteLine("1. Vehicles Available   2. Register Client");
+            Console.WriteLine("3. Rent Vehicle         4. Return Vehicle");
+            Console.WriteLine("5. System State         6. Run Tests");
+            Console.WriteLine("7. Delete Client        8. Update Client");
+            Console.WriteLine("9. List Clients        10. Rental History");
             Console.WriteLine("0. Exit");
-            Console.Write("Select option: ");
+            Console.Write("\nSelect option: ");
         }
     }
 }
